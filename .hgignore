@@ -1,0 +1,19 @@
+syntax: glob
+*~
+.idea
+.idea/
+.idea/*
+*.iml
+target
+target/
+target/*
+*.log
+\.orig\..*$
+\.orig$
+\.chg\..*$
+\.rej$
+\.conflict\~$
+nb-configuration.xml
+obj
+bin
+_UpgradeReport_Files

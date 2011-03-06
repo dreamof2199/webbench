@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="WebBenchBrowser">
+</Property><Property Name="Solution File" Value="C:\sandbox\open-sources\webbench\src\main\dotnet\WebBenchBrowser.sln">
+</Property><Property Name="Date" Value="Friday, March 04, 2011">
+</Property><Property Name="Time" Value="9:54 AM">
+</Property></Properties><Event ErrorLevel="0" Project="WebBenchBrowser" Source="WebBenchBrowser.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="WebBenchBrowser" Source="WebBenchBrowser.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="TestStarter" Source="TestStarter\TestStarter.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="TestStarter" Source="TestStarter\TestStarter.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="" Source="WebBenchBrowser.sln" Description="Solution converted successfully">
+</Event><Event ErrorLevel="3" Project="" Source="WebBenchBrowser.sln" Description="Converted">
+</Event><Event ErrorLevel="0" Project="WebBenchBrowser" Source="WebBenchBrowser.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event><Event ErrorLevel="0" Project="TestStarter" Source="TestStarter\TestStarter.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>
