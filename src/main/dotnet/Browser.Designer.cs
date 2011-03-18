@@ -55,7 +55,7 @@ namespace WebBenchBrowser
             this.stop = new System.Windows.Forms.ToolStripButton();
             this.home = new System.Windows.Forms.ToolStripButton();
             this.urlLabel = new System.Windows.Forms.ToolStripLabel();
-            this.url = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripUrl = new System.Windows.Forms.ToolStripTextBox();
             this.go = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.toolStrip1.SuspendLayout();
@@ -129,8 +129,8 @@ namespace WebBenchBrowser
             // 
             // url
             // 
-            this.url.Name = "url";
-            this.url.Size = new System.Drawing.Size(500, 25);
+            this.toolStripUrl.Name = "url";
+            this.toolStripUrl.Size = new System.Drawing.Size(500, 25);
             // 
             // go
             // 
@@ -152,7 +152,7 @@ namespace WebBenchBrowser
             this.stop,
             this.home,
             this.urlLabel,
-            this.url,
+            this.toolStripUrl,
             this.go});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
@@ -182,6 +182,8 @@ namespace WebBenchBrowser
         //[DockingAttribute(DockingBehavior.AutoDock)]
         //[PermissionSetAttribute(SecurityAction.InheritanceDemand, Name = "FullTrust")]
         //[PermissionSetAttribute(SecurityAction.LinkDemand, Name = "FullTrust")]
+        //[assembly: PermissionSetAttribute(SecurityAction.InheritanceDemand, Name = "FullTrust")]
+        //[assembly: PermissionSetAttribute(SecurityAction.LinkDemand, Name = "FullTrust")]
         private System.Windows.Forms.WebBrowser webBrowser;
         private System.Windows.Forms.ToolStripButton back;
         private System.Windows.Forms.ToolStripButton forward;
@@ -189,7 +191,7 @@ namespace WebBenchBrowser
         private System.Windows.Forms.ToolStripButton stop;
         private System.Windows.Forms.ToolStripButton home;
         private System.Windows.Forms.ToolStripLabel urlLabel;
-        private System.Windows.Forms.ToolStripTextBox url;
+        private System.Windows.Forms.ToolStripTextBox toolStripUrl;
         private System.Windows.Forms.ToolStripButton go;
         private System.Windows.Forms.ToolStrip toolStrip1;
 

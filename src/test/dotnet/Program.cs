@@ -22,6 +22,7 @@ using WebBenchBrowser;
 using NLog;
 using NLog.Targets;
 using NLog.Config;
+using NLog.Layouts;
 
 namespace TestStarter
 {
@@ -46,23 +47,38 @@ namespace TestStarter
             //file
             //FileTarget fileTarget = new FileTarget();
             //config.AddTarget("file", fileTarget);
+            //csv
+            FileTarget csvTarget = new FileTarget();
+            config.AddTarget("csv", csvTarget);
+
 
             // Step 3. Set target properties 
             consoleTarget.Layout = "${date:format=HH\\:MM\\:ss} ${logger} [${threadid}] - ${message}";
             //fileTarget.FileName = "${basedir}/file.txt";
             //fileTarget.Layout = "${message}";
+            csvTarget.FileName = "${basedir}/bench.csv";
+            CsvLayout csvLayout = new CsvLayout();
+            csvLayout.WithHeader = true;
+            csvLayout.Columns.Add(new CsvColumn("date", "${date:format=HH\\:MM\\:ss}"));
+            csvLayout.Columns.Add(new CsvColumn("thread", "${threadid}"));
+            csvLayout.Columns.Add(new CsvColumn("action", "${event-context:item=action}"));
+            csvLayout.Columns.Add(new CsvColumn("elapsed", "${event-context:item=elapsed}"));
+            csvTarget.Layout = csvLayout;
 
             // Step 4. Define rules
             LoggingRule rule1 = new LoggingRule("*", LogLevel.Debug, consoleTarget);
             config.LoggingRules.Add(rule1);
-
+            
             //LoggingRule rule2 = new LoggingRule("*", LogLevel.Debug, fileTarget);
             //config.LoggingRules.Add(rule2);
+
+            LoggingRule rule3 = new LoggingRule("webbench.action", LogLevel.Info, csvTarget);
+            config.LoggingRules.Add(rule3);
 
             // Step 5. Activate the configuration
             LogManager.Configuration = config;
 
-            browser = Browser.newBrowser();
+            browser = Browser.NewBrowser("toto");
             parallel();   
         }
 
@@ -70,7 +86,7 @@ namespace TestStarter
         static void parallel() 
         {
             logger.Debug("start browser thread");
-            browser.run();
+            browser.Run();
             scenario_examples(null, null);
         }
 
@@ -78,7 +94,7 @@ namespace TestStarter
 
         static void run() 
         {
-            browser.run();
+            browser.Run();
         }
 
         static void scenario_examples(object sender, EventArgs e)

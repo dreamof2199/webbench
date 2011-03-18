@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebBenchBrowser", "WebBenchBrowser.csproj", "{B20F22DC-D724-47C1-9F0E-8A0A4F67EE9F}"
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "IPyWebBench", "..\ipython\IPyWebBench.pyproj", "{B68B5A51-312A-4BD9-8855-3D26010839E6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B20F22DC-D724-47C1-9F0E-8A0A4F67EE9F} = {B20F22DC-D724-47C1-9F0E-8A0A4F67EE9F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestStarter", "..\..\test\dotnet\TestStarter.csproj", "{FB46A492-6FB5-4A5D-B14C-1639356DD9F6}"
 EndProject

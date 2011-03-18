@@ -15,6 +15,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -30,7 +31,7 @@ namespace WebBenchBrowser
     //[assembly: PermissionSetAttribute(SecurityAction.LinkDemand, Name = "FullTrust")]
     public class WebElement
     {
-        private Browser parent;
+        private Browser parentBrowser;
         private static Logger logger = LogManager.GetLogger("webelement");
         private volatile HtmlElement underlying;
         public static WebElement newElement(Browser parent, HtmlElement element)
@@ -48,7 +49,18 @@ namespace WebBenchBrowser
                 underlying.Name = value;
             }
         }
-
+        public Collection<WebElement> Children
+        {
+            get
+            {
+                Collection<WebElement> result = new Collection<WebElement>();
+                foreach (HtmlElement e in underlying.Children)
+                {
+                    result.Add(newElement(parentBrowser, e));
+                }
+                return result;
+            }
+        }
         public string Id
         {
             get
@@ -69,6 +81,30 @@ namespace WebBenchBrowser
             }
         }
 
+        public string InnerHtml
+        {
+            get
+            {
+                return underlying.InnerHtml;
+            }
+        }
+
+        public WebElement Parent
+        {
+            get
+            {
+                return newElement(parentBrowser, underlying.Parent);
+            }
+        }
+
+        public string OuterHtml
+        {
+            get
+            {
+                return underlying.OuterHtml;
+            }
+        }
+
         public string TagName
         {
             get
@@ -77,34 +113,116 @@ namespace WebBenchBrowser
             }
         }
 
+        public bool Enabled
+        {
+            get
+            {
+                return underlying.Enabled;
+            }
+        }
+
+        //public bool Selected
+        //{
+        //    get 
+        //    {
+        //        underlying
+        //    }
+        //}
+
+        public string Value
+        {
+            get
+            {
+                if (IsInput())
+                {
+                    underlying.Focus();
+                    return ((mshtml.IHTMLInputElement)underlying.DomElement).value;
+                }
+                if (IsTextArea())
+                {
+                    underlying.Focus();
+                    return ((mshtml.IHTMLTextAreaElement)underlying.DomElement).value;
+                }
+                return null;
+            }
+            set
+            {
+                if (IsInput())
+                {
+                    underlying.Focus();
+                    ((mshtml.IHTMLInputElement)underlying.DomElement).value = value;
+                    //underlying.RaiseEvent("onchange");
+                }
+                if (IsTextArea())
+                {
+                    underlying.Focus();
+                    ((mshtml.IHTMLTextAreaElement)underlying.DomElement).value = value;
+                    //underlying.RaiseEvent("onchange");
+                }
+            }
+        }
+
+
         private WebElement(Browser parent, HtmlElement underlying)
         {
-            this.parent = parent;
+            this.parentBrowser = parent;
             this.underlying = underlying;
         }
 
         public string GetAttribute(string attributeName) 
         {
-            return underlying.GetAttribute(attributeName);
+            //return underlying.GetAttribute(attributeName);
+            mshtml.IHTMLElement element = (mshtml.IHTMLElement)underlying.DomElement;
+            object result = element.getAttribute(attributeName);
+            return result != null ? result.ToString(): null;
+        }
+
+        public void Click(string url)
+        {
+            ClickDelegate(UrlNavigationCompleteDelegate.NewUrlDelegate(url));
+        }
+
+        public void ClickDelegate(NavigationCompleteDelegate delegate_)
+        {
+            this.parentBrowser.NavigationUrl = delegate_;
+            Click();
+        }
+
+        public void ClickWithDelegate(NavigationCompleteDelegate clickDelegate)
+        {
+            this.parentBrowser.NavigationUrl = clickDelegate;
+            Click();
         }
 
         public void Click()
         {
             using (Barrier action = new Barrier(2))
             {
-                lock (parent) parent.SetBarrier(action);
+                logger.Debug("click on: {0}", OuterHtml);
+                lock (parentBrowser) parentBrowser.SetBarrier(action);
                 DoClick();
                 action.SignalAndWait();
-                lock (parent) parent.SetBarrier(null);
+                lock (parentBrowser) parentBrowser.SetBarrier(null);
             }
         }
         private void DoClick()
         {
-            underlying.Focus();
+            if (IsFocusable())
+                underlying.Focus();
             mshtml.IHTMLElement element = (mshtml.IHTMLElement)underlying.DomElement;
             element.click();
         }
 
+        public bool IsFocusable() 
+        {
+            return !IsLink();
+        }
+
+        public bool IsLink()
+        {
+            return underlying.DomElement is mshtml.IHTMLAnchorElement;
+            //return (underlying.TagName.ToLower().Equals("a"));
+        }
 
         public bool IsInput()
         {
@@ -114,7 +232,7 @@ namespace WebBenchBrowser
         {
             return (underlying.TagName.ToLower().Equals("textarea"));
         }
-        public bool hasValue()
+        public bool SupportValue()
         {
             return IsInput() || IsTextArea();
         }
@@ -123,16 +241,16 @@ namespace WebBenchBrowser
         {
             using (Barrier action = new Barrier(2))
             {
-                lock (parent) parent.SetBarrier(action);
+                lock (parentBrowser) parentBrowser.SetBarrier(action);
                 DoSubmit();
                 action.SignalAndWait();
-                lock (parent) parent.SetBarrier(null);
+                lock (parentBrowser) parentBrowser.SetBarrier(null);
             }
         }
 
         private void DoSubmit()
         {
-            logger.Debug("submit element: <{0} ... name='{1}' ...", underlying.TagName, underlying.Name);
+            logger.Debug("submit element: {0}", OuterHtml);
             if (underlying.TagName.ToLower().Equals("input"))
             {
                 mshtml.IHTMLInputElement input = (mshtml.IHTMLInputElement)underlying.DomElement;
@@ -196,18 +314,32 @@ namespace WebBenchBrowser
         public void SendKeys(string keys)
         {
             logger.Debug("send keys: {0}", keys);
-            if (IsInput())
+            Value = keys;
+        }
+
+        public void SendKeys(string keys, string url)
+        {
+            if (url == null)
             {
-                underlying.Focus();
-                ((mshtml.IHTMLInputElement)underlying.DomElement).value = keys;
-                //underlying.RaiseEvent("onchange");
+                SendKeys(keys);
             }
-            if (IsTextArea())
+            else
             {
-                underlying.Focus();
-                ((mshtml.IHTMLTextAreaElement)underlying.DomElement).value = keys;
-                //underlying.RaiseEvent("onchange");
+                logger.Debug("send keys: {0} and waiting for {1}", keys, url);
+                using (Barrier action = new Barrier(2))
+                {
+                    lock (parentBrowser)
+                    {
+                        parentBrowser.NavigationUrl = UrlNavigationCompleteDelegate.NewUrlDelegate(url);
+                        parentBrowser.SetBarrier(action);
+                    }
+                    Value = keys;
+                    action.SignalAndWait();
+                    lock (parentBrowser) parentBrowser.SetBarrier(null);
+                }
             }
         }
+
+        
     }
 }

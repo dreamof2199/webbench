@@ -45,16 +45,97 @@ namespace WebBenchBrowser
      *   - File config: http://nlog-project.org/wiki/Configuration_file
      *   - Layout: http://nlog-project.org/wiki/Layout_renderers
      * Perf: http://msdn.microsoft.com/en-us/library/15t15zda.aspx
+     * Delegate:
+     *  - todo
      */
     //[assembly: PermissionSetAttribute(SecurityAction.InheritanceDemand, Name = "FullTrust")]
     //[assembly: PermissionSetAttribute(SecurityAction.LinkDemand, Name = "FullTrust")]
     public partial class Browser : Form
     {
-        private static Logger logger = LogManager.GetLogger("borwser");
+        private static Logger logger = LogManager.GetLogger("webbench.browser");
+        private static Logger actionLogger = LogManager.GetLogger("webbench.action");
         private Barrier barrier;
         private Stopwatch stopwatch = new Stopwatch();
         private HtmlDocument document;
+        private volatile string documentText;
         private Barrier startupAction;
+        private volatile NavigationCompleteDelegate navigationUrl_;
+        private string name_;
+        private volatile string action_;
+        public string Action { get 
+            {
+                return action_;
+            } 
+            set
+            {
+                action_ = value;
+            } 
+        }
+        public NavigationCompleteDelegate NavigationUrl 
+        {
+            get
+            {
+                return navigationUrl_;
+            } 
+            set 
+            {
+                navigationUrl_ = value;
+            }
+        }
+
+        public Collection<WebElement> All 
+        {
+            get
+            {
+                HtmlElementCollection htmlElements = null;
+                lock (this)
+                {
+                    htmlElements = document.All;
+                }
+                Collection<WebElement> result = new Collection<WebElement>();
+                foreach (HtmlElement e in htmlElements)
+                {
+                    result.Add(WebElement.newElement(this, e));
+                }
+                return result;
+            }
+        }
+
+        public Collection<WebElement> AllImages
+        {
+            get
+            {
+                HtmlElementCollection htmlElements = null;
+                lock (this)
+                {
+                    htmlElements = document.Images;
+                }
+                Collection<WebElement> result = new Collection<WebElement>();
+                foreach (HtmlElement e in htmlElements)
+                {
+                    result.Add(WebElement.newElement(this, e));
+                }
+                return result;
+            }
+        }
+
+        public Collection<WebElement> AllLinks { 
+            get
+            {
+                HtmlElementCollection htmlElements = null;
+                lock (this)
+                {
+                    //htmlElements = document.GetElementsByTagName("a");
+                    htmlElements = document.Links;
+                }
+                Collection<WebElement> result = new Collection<WebElement>();
+                foreach (HtmlElement e in htmlElements)
+                {
+                    result.Add(WebElement.newElement(this, e));
+                }
+                return result;
+            }
+        } 
 
         static Browser()
         {
@@ -62,21 +143,50 @@ namespace WebBenchBrowser
             Application.SetCompatibleTextRenderingDefault(false);
         }
 
-        public static Browser newBrowser()
+        
+
+        public static Browser NewBrowser(string name)
         {
             logger.Debug("create new browser");
             Application.DoEvents();
-            return new Browser();
+            return new Browser(name);
         }
 
-        private Browser()
+        private Browser(string name)
         {
+            name_ = name;
             InitializeComponent();
             webBrowser.Navigating += new WebBrowserNavigatingEventHandler(webBrowser_Navigating);
-            
+            webBrowser.AllowNavigation = true;
+            //webBrowser.ScriptErrorsSuppressed = true;
         }
 
-        public void run()
+        public string PageSource {
+            get
+            {
+                return documentText;
+            }
+        }
+
+        
+
+        public string Url
+        {
+            get 
+            {
+                return toolStripUrl.Text;
+            }
+        }
+
+        public string Title 
+        {
+            get 
+            {
+                return webBrowser.DocumentTitle;
+            }
+        }
+
+        public void Run()
         {
             logger.Debug("run browser in new thread");
             Thread t = new Thread(start);
@@ -98,6 +208,7 @@ namespace WebBenchBrowser
         private void startup(object sender, EventArgs e)
         {
             startupAction.SignalAndWait();
+            //((SHDocVw.WebBrowser)webBrowser.ActiveXInstance).RegisterAsBrowser = true;
         }
 
         public void SetBarrier(Barrier barrier)
@@ -137,7 +248,7 @@ namespace WebBenchBrowser
 
         private void go_Click(object sender, EventArgs e)
         {
-            Get(url.Text, null);
+            Get(toolStripUrl.Text, null);
         }
 
         //Navigating actions
@@ -189,6 +300,17 @@ namespace WebBenchBrowser
             webBrowser.GoForward();
         }
 
+        public void DoRefresh(String waitingUrl)
+        {
+            DoRefresh(UrlNavigationCompleteDelegate.NewUrlDelegate(waitingUrl));
+        }
+
+        public void DoRefresh(NavigationCompleteDelegate delegate_)
+        {
+            NavigationUrl = delegate_;
+            DoRefresh();
+        }
+
         public void DoRefresh()
         {
             using (Barrier action = new Barrier(2))
@@ -201,7 +323,7 @@ namespace WebBenchBrowser
 
         private void Refresh(Barrier barrier)
         {
-            logger.Debug("Back requested");
+            logger.Debug("Refresh requested");
 
             if (barrier != null)
             {
@@ -237,48 +359,79 @@ namespace WebBenchBrowser
             webBrowser.Navigate(url);
         }
 
+        private bool IsNavigationUrlEqualsTo(Uri url)
+        {
+
+            if (NavigationUrl != null)
+                return NavigationUrl(url);
+            else
+            {
+                logger.Error("Navigation initialisation error recive an url check without initialized target url: {0}", url);
+                return true;
+            }
+        }
+
+        private bool IsDocumentComplete(WebBrowser browser, WebBrowserDocumentCompletedEventArgs e)
+        {
+            if (IsNavigationUrlEqualsTo(e.Url))
+                return true;
+            return false;
+        }
+
+
         //Event handling
         private void webBrowser_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
+
             string eurl = e.Url.ToString();         
             var browser = (WebBrowser)sender;          
             if (!(eurl.StartsWith("http://") || eurl.StartsWith("https://")))              
             {                          
                 // in AJAX
-                logger.Debug("Ajax code execution to: {0}, complete", url);
-            }         
-            if (e.Url.AbsolutePath != this.webBrowser.Url.AbsolutePath)              
-            {             
+                logger.Debug("Ajax code execution to: {0}, complete", toolStripUrl);
+            }
+            if (e.Url.AbsolutePath != this.webBrowser.Url.AbsolutePath)
+            {
                 // IFRAME
                 logger.Debug("IFrame download complete: {0}", e.Url.AbsolutePath);
-            }              
-            else              
+            }
+            else 
+            {
+                logger.Debug("Root download complete: {0}", e.Url.AbsolutePath);
+            }
+            if (IsDocumentComplete((WebBrowser)sender, e))
             {                          
-                // REAL DOCUMENT COMPLETE             
-                // Put my code here         
+                // REAL DOCUMENT COMPLETE
+                // Put my code here
                 logger.Debug("full page download complete");
                 lock (this)
                 {
                     if (barrier != null)
                     {
                         stopwatch.Stop();
-                        logger.Info("document completed in {0}ms, for url: {1}", stopwatch.Elapsed, e.Url.ToString());
-                        stopwatch.Reset();
+                        NavigationUrl = null;
                         document = webBrowser.Document;
+                        documentText = webBrowser.DocumentText;
+                        logger.Info("document completed in {0}ms, for url: {1}", stopwatch.Elapsed, e.Url.ToString());
+                        LogEventInfo theEvent = new LogEventInfo(LogLevel.Info, "webbench.action", "Pass my custom value");
+                        theEvent.Properties["action"] = Action;
+                        theEvent.Properties["client"] = name_;
+                        theEvent.Properties["elapsed"] = stopwatch.Elapsed;
+                        stopwatch.Reset();
                         barrier.SignalAndWait();
                         barrier = null;
                     }
                 }
-                url.Text = e.Url.ToString();
+                toolStripUrl.Text = e.Url.ToString();
             }
         }
 
         
         private void webBrowser_Navigating(object sender, WebBrowserNavigatingEventArgs e)
         {
-            logger.Debug("navigating to: {0}", e.Url);
-            if (!e.TargetFrameName.Equals(""))
-                logger.Debug("navigating for a iframe: {0}",e.TargetFrameName);
+            logger.Debug("navigating to: {0}, for frame: {1}", e.Url, e.TargetFrameName);
+            if (NavigationUrl == null)
+                NavigationUrl = UrlNavigationCompleteDelegate.NewUrlDelegate(e.Url);
             if (!stopwatch.IsRunning)
                 stopwatch.Start();
         }
@@ -286,14 +439,45 @@ namespace WebBenchBrowser
         //Search Context
         public WebElement FindElementById(string id)
         {
-            return WebElement.newElement(this, webBrowser.Document.GetElementById(id));
+            logger.Debug("find by id: {0}", id);
+            lock (this)
+            {
+                HtmlElement htmlElement = document.GetElementById(id);
+                if (htmlElement != null)
+                    return WebElement.newElement(this, htmlElement);
+                return null;
+
+            }
         }
+        
+        public Collection<WebElement> FindElementsByClassName(string name) 
+        {
+            HtmlElementCollection htmlElements = null;
+            lock (this)
+            {
+                htmlElements = document.All;
+            }
+            Collection<WebElement> result = new Collection<WebElement>();
+            foreach (HtmlElement e in htmlElements)
+            {
+                string class_ =  e.GetAttribute("class");
+                if (class_ != null && class_.Equals(name))
+                    result.Add(WebElement.newElement(this, e));
+            }
+            return result;
+        }
+        public WebElement FindElementByClassName(string name)
+        {
+            Collection<WebElement> result = FindElementsByClassName(name);
+            return result.Count > 0 ? result[0]: null;
+        }
+
         public Collection<WebElement> FindElementsByTagName(string tagName)
         {
             HtmlElementCollection htmlElements = null;
             lock (this)
             {
-                htmlElements = webBrowser.Document.GetElementsByTagName(tagName);
+                htmlElements = document.GetElementsByTagName(tagName);
             }
             Collection<WebElement> result = new Collection<WebElement>();
             foreach (HtmlElement e in htmlElements)
@@ -306,17 +490,43 @@ namespace WebBenchBrowser
 
         public WebElement FindElementByName(string name)
         {
+            return FindElementByNameDelegate(name, null);
+        }
+        public WebElement FindElementByName(string name, string url)
+        {
+            NavigationCompleteDelegate delegate_ = url == null ? null : UrlNavigationCompleteDelegate.NewUrlDelegate(url);
+            return FindElementByNameDelegate(name, delegate_);
+        }
+        public WebElement FindElementByNameDelegate(string name, NavigationCompleteDelegate navComplete)
+        {
             logger.Debug("find by name: {0}", name);
+            if (navComplete != null)
+            {
+                WebElement result = null;
+                using (Barrier action = new Barrier(2))
+                {
+                    result = DoFindElementByName(name, navComplete);
+                    action.SignalAndWait();
+                    this.barrier = null;
+                }
+                return result;
+            }
+            else
+                return DoFindElementByName(name, navComplete);
+        }
+        private WebElement DoFindElementByName(string name, NavigationCompleteDelegate navComplete)
+        {
+            HtmlElement htmlElement = null;
             lock (this)
             {
-                HtmlElement htmlElement = document.All[name];
-                if (htmlElement != null)
-                    return WebElement.newElement(this, htmlElement);
-                return null;
-                
+                NavigationUrl = navComplete;
+                htmlElement = document.All[name];
             }
+            if (htmlElement != null)
+                return WebElement.newElement(this, htmlElement);
+            return null;
         }
-        
+             
         public Collection<WebElement> FindElementsByLinkText(string linkText)
         {
             HtmlElementCollection htmlElements = null;
@@ -413,13 +623,13 @@ namespace WebBenchBrowser
 
         private WebElement SwitchToFrame(int index)
         {
-            //webBrowser.Document.Window.Frames TODO
+            //document.Window.Frames TODO
             return null;
         }
 
         private WebElement SwitchToFrame(string frameName)
         {
-            //webBrowser.Document.Window.Frames TODO
+            //document.Window.Frames TODO
             return null;
         }
 
@@ -429,6 +639,10 @@ namespace WebBenchBrowser
             return null;
         }
 
+        public static bool NullNavigationDelegate(Uri url)
+        {
+            return true;
+        }
     //    private void webBrowser1_Navigating(object sender, WebBrowserNavigatingEventArgs e)
     //    {
     //        System.Windows.Forms.HtmlDocument document =
@@ -444,5 +658,44 @@ namespace WebBenchBrowser
     //                e.Url.ToString());
     //        }
     //    }
+    }
+
+    public delegate bool NavigationCompleteDelegate(Uri url);
+
+    
+
+    public class UrlNavigationCompleteDelegate
+    {
+        private string m_url;
+        public UrlNavigationCompleteDelegate(string url)
+        {
+            m_url = url;
+        }
+        public bool IsNavigationUrlEqualsTo(Uri url)
+        {
+            if (m_url == null) return true;
+
+            return m_url.StartsWith("/") ? m_url.Equals(url.AbsolutePath) : m_url.Equals(url.ToString());
+        }
+        public static NavigationCompleteDelegate NewUrlDelegate(Uri url) 
+        {
+            if (url == null) return NullNavigationDelegate;
+
+            UrlNavigationCompleteDelegate delegate_ = new UrlNavigationCompleteDelegate(url.ToString());
+            return delegate_.IsNavigationUrlEqualsTo;
+        }
+
+        public static NavigationCompleteDelegate NewUrlDelegate(string url)
+        {
+            if (url == null) return NullNavigationDelegate;
+
+            UrlNavigationCompleteDelegate delegate_ = new UrlNavigationCompleteDelegate(url);
+            return delegate_.IsNavigationUrlEqualsTo;
+        }
+
+        public static bool NullNavigationDelegate(Uri url)
+        {
+            return true;
+        }
     }
 }

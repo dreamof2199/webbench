@@ -11,8 +11,8 @@
     <AssemblyName>IPyWebBench</AssemblyName>
     <Name>IPyWebBench</Name>
     <RootNamespace>IPyWebBench</RootNamespace>
-    <InterpreterPath />
-    <CommandLineArguments />
+    <InterpreterPath>c:\Program Files\IronPython 2.7\ipy.exe</InterpreterPath>
+    <CommandLineArguments>-h</CommandLineArguments>
     <IsWindowsApplication>False</IsWindowsApplication>
     <DebugStdLib>False</DebugStdLib>
   </PropertyGroup>
@@ -33,6 +33,8 @@
     <Folder Include="webbench" />
   </ItemGroup>
   <ItemGroup>
+    <SearchPath Include="C:\sandbox\open-sources\webbench\src\main\dotnet\bin\Debug\" />
+    <SearchPath Include="C:\sandbox\open-sources\webbench\src\main\dotnet\bin\Debug\" />
     <SearchPath Include="C:\sandbox\open-sources\webbench\src\main\dotnet\bin\Debug\" />
   </ItemGroup>
 </Project>
