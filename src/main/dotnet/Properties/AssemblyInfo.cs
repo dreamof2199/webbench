@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("WebBenchBrowser")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("reuters ltd")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("WebBenchBrowser")]
-[assembly: AssemblyCopyright("Copyright © reuters ltd 2011")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
