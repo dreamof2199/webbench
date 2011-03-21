@@ -50,16 +50,15 @@ namespace TestStarter
             //csv
             FileTarget csvTarget = new FileTarget();
             config.AddTarget("csv", csvTarget);
-
-
+            
             // Step 3. Set target properties 
-            consoleTarget.Layout = "${date:format=HH\\:MM\\:ss} ${logger} [${threadid}] - ${message}";
+            consoleTarget.Layout = "${date:format=HH\\:MM\\:ss:SSS} ${logger} [${threadid}] - ${message}";
             //fileTarget.FileName = "${basedir}/file.txt";
             //fileTarget.Layout = "${message}";
             csvTarget.FileName = "${basedir}/bench.csv";
             CsvLayout csvLayout = new CsvLayout();
             csvLayout.WithHeader = true;
-            csvLayout.Columns.Add(new CsvColumn("date", "${date:format=HH\\:MM\\:ss}"));
+            csvLayout.Columns.Add(new CsvColumn("date", "${date:format=HH\\:MM\\:ss:SSS}"));
             csvLayout.Columns.Add(new CsvColumn("thread", "${threadid}"));
             csvLayout.Columns.Add(new CsvColumn("action", "${event-context:item=action}"));
             csvLayout.Columns.Add(new CsvColumn("elapsed", "${event-context:item=elapsed}"));

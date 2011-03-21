@@ -61,6 +61,19 @@ namespace WebBenchBrowser
                 return result;
             }
         }
+
+        public string Action 
+        {
+            get 
+            {
+                return parentBrowser.Action;
+            }
+            set
+            {
+                parentBrowser.Action = value;
+            }
+        }
+
         public string Id
         {
             get
@@ -185,12 +198,7 @@ namespace WebBenchBrowser
         public void ClickDelegate(NavigationCompleteDelegate delegate_)
         {
             this.parentBrowser.NavigationUrl = delegate_;
-            Click();
-        }
-
-        public void ClickWithDelegate(NavigationCompleteDelegate clickDelegate)
-        {
-            this.parentBrowser.NavigationUrl = clickDelegate;
+            logger.Debug("click with delegate");
             Click();
         }
 

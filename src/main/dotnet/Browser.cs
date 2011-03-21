@@ -62,6 +62,13 @@ namespace WebBenchBrowser
         private volatile NavigationCompleteDelegate navigationUrl_;
         private string name_;
         private volatile string action_;
+        public string BrowserName
+        {
+            get
+            {
+                return name_;
+            }
+        }
         public string Action { get 
             {
                 return action_;
@@ -143,8 +150,6 @@ namespace WebBenchBrowser
             Application.SetCompatibleTextRenderingDefault(false);
         }
 
-        
-
         public static Browser NewBrowser(string name)
         {
             logger.Debug("create new browser");
@@ -167,8 +172,6 @@ namespace WebBenchBrowser
                 return documentText;
             }
         }
-
-        
 
         public string Url
         {
@@ -345,6 +348,11 @@ namespace WebBenchBrowser
             }
         }
 
+        public void Quit()
+        {
+            Close();
+        }
+
         private void Get(string url, Barrier barrier)
         {
             logger.Debug("Get requested to: {0}", url);
@@ -378,11 +386,9 @@ namespace WebBenchBrowser
             return false;
         }
 
-
         //Event handling
         private void webBrowser_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-
             string eurl = e.Url.ToString();         
             var browser = (WebBrowser)sender;          
             if (!(eurl.StartsWith("http://") || eurl.StartsWith("https://")))              
@@ -412,11 +418,14 @@ namespace WebBenchBrowser
                         NavigationUrl = null;
                         document = webBrowser.Document;
                         documentText = webBrowser.DocumentText;
-                        logger.Info("document completed in {0}ms, for url: {1}", stopwatch.Elapsed, e.Url.ToString());
-                        LogEventInfo theEvent = new LogEventInfo(LogLevel.Info, "webbench.action", "Pass my custom value");
+                        logger.Info("document completed for action {0} in {1}, on url: {2}", Action, stopwatch.Elapsed, e.Url.ToString());
+                        LogEventInfo theEvent = new LogEventInfo(LogLevel.Info, "webbench.action", "");
                         theEvent.Properties["action"] = Action;
                         theEvent.Properties["client"] = name_;
                         theEvent.Properties["elapsed"] = stopwatch.Elapsed;
+                        theEvent.Properties["url"] = e.Url.ToString();
+                        actionLogger.Log(theEvent);
+                        //actionLogger.Info("{0}, {1}, {2}, {3}", name_, Action, stopwatch.Elapsed, e.Url.ToString());
                         stopwatch.Reset();
                         barrier.SignalAndWait();
                         barrier = null;
@@ -425,15 +434,19 @@ namespace WebBenchBrowser
                 toolStripUrl.Text = e.Url.ToString();
             }
         }
-
         
         private void webBrowser_Navigating(object sender, WebBrowserNavigatingEventArgs e)
         {
             logger.Debug("navigating to: {0}, for frame: {1}", e.Url, e.TargetFrameName);
             if (NavigationUrl == null)
+            {
+                logger.Debug("not navigation completion method provided setup the default one on: {1}", e.Url.ToString());
                 NavigationUrl = UrlNavigationCompleteDelegate.NewUrlDelegate(e.Url);
+            }
             if (!stopwatch.IsRunning)
+            {
                 stopwatch.Start();
+            }
         }
 
         //Search Context
@@ -461,6 +474,7 @@ namespace WebBenchBrowser
             foreach (HtmlElement e in htmlElements)
             {
                 string class_ =  e.GetAttribute("class");
+                class_ = class_ != null ? class_ : e.GetAttribute("className");
                 if (class_ != null && class_.Equals(name))
                     result.Add(WebElement.newElement(this, e));
             }

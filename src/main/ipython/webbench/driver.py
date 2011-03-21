@@ -33,26 +33,44 @@ from WebBenchBrowser import Browser as _Browser
 from NLog import LogManager
 
 import time
-
+import inspect
+from contextlib import contextmanager
 
 # create logger
-logger = LogManager.GetLogger("webbench")
+logger = LogManager.GetLogger("webbench.driver")
 
-def monitor(action, params):
-    def mon(f):
-        def new_f(*args, **kwds):
-            start = time.clock()
-            try:
-                result = f(*args, **kwds)
-            except:
-                end = time.clock()
-                
-            
-            
-            return result
-        new_f.func_name = f.func_name
-        return new_f
-    return check_returns
+@contextmanager
+def action(obj, name):
+    logger.Debug('execute action {0}', name)
+    #if hasattr(obj,'action'):
+    obj.setaction(name)
+    try:
+        yield
+    finally:
+        obj.setaction(None)
+    #else:
+    #    logger.Error('cannot set action on {0}', repr(obj))
+    #    yield
+    
+#def action(name):
+#    def _action(f):
+#        def __action(*args, **kargs):
+#            if inspect.ismethod(f):
+#                obj = f.im_self
+#                if hasattr(obj,action):
+#                    obj.action = name
+#                    try:
+#                        result = f(*args, **kargs)
+#                    finally:
+#                        obj.action = None
+#                    return result
+#                else:
+#                    logger.Error('cannot set action on {0}', repr(f))
+#            return f(*args, **kargs)
+#        __action.func_name = f.func_name
+#        return __action
+#    return _action
+
 
 class Wrapper(object):
     def __init__(self, delegate):
@@ -65,7 +83,14 @@ class Wrapper(object):
           //timeout:  the amount of time to wait for extension socket
         """
         self.delegate = delegate
-
+    
+    def getaction(self):
+        return self.delegate.Action
+    
+    def setaction(self, name):
+        self.delegate.Action = name
+    action = property(getaction, setaction, None, "I'm the 'action' property.")
+        
 class SearchContext(Wrapper):
     #Find element
     def find_element(self, by):
@@ -324,7 +349,7 @@ class WebDriver(SearchContext):
     @property
     def name(self):
         """Returns the name of the underlying browser for this instance."""
-        return 'ie'
+        return self.delegate.BrowserName
     
     @property
     def action(self, action):

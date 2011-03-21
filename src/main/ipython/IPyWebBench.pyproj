@@ -5,14 +5,15 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{b68b5a51-312a-4bd9-8855-3d26010839e6}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>bench.py</StartupFile>
+    <StartupFile>caceis.py</StartupFile>
     <SearchPath>..\dotnet\bin\Debug\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <AssemblyName>IPyWebBench</AssemblyName>
     <Name>IPyWebBench</Name>
     <RootNamespace>IPyWebBench</RootNamespace>
     <InterpreterPath>c:\Program Files\IronPython 2.7\ipy.exe</InterpreterPath>
-    <CommandLineArguments>-h</CommandLineArguments>
+    <CommandLineArguments>
+    </CommandLineArguments>
     <IsWindowsApplication>False</IsWindowsApplication>
     <DebugStdLib>False</DebugStdLib>
   </PropertyGroup>
@@ -26,6 +27,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="bench.py" />
+    <None Include="caceis.py" />
     <None Include="webbench\driver.py" />
     <None Include="webbench\__init__.py" />
   </ItemGroup>
