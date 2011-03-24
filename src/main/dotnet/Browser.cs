@@ -36,6 +36,7 @@ namespace WebBenchBrowser
      * document completed:
      *    - http://stackoverflow.com/questions/840813/how-to-use-webbrowser-control-documentcompleted-event-in-c
      *    - http://stackoverflow.com/questions/3431451/webbrowser-control-document-completed-fires-more-than-once
+     *    - http://msdn.microsoft.com/en-us/library/aa752041.aspx
      *    - ...
      * ? IE http://www.codeproject.com/KB/toolbars/MicrosoftMshtml.aspx?msg=2893585
      * 
@@ -62,13 +63,7 @@ namespace WebBenchBrowser
         private volatile NavigationCompleteDelegate navigationUrl_;
         private string name_;
         private volatile string action_;
-        public string BrowserName
-        {
-            get
-            {
-                return name_;
-            }
-        }
+        
         public string Action { get 
             {
                 return action_;
@@ -78,6 +73,29 @@ namespace WebBenchBrowser
                 action_ = value;
             } 
         }
+
+        private volatile int actionId_;
+
+        public int ActionId
+        {
+            get
+            {
+                return actionId_;
+            }
+            set
+            {
+                actionId_ = value;
+            }
+        }
+
+        public string BrowserName
+        {
+            get
+            {
+                return name_;
+            }
+        }
+
         public NavigationCompleteDelegate NavigationUrl 
         {
             get
@@ -164,6 +182,7 @@ namespace WebBenchBrowser
             webBrowser.Navigating += new WebBrowserNavigatingEventHandler(webBrowser_Navigating);
             webBrowser.AllowNavigation = true;
             //webBrowser.ScriptErrorsSuppressed = true;
+            webBrowser.HandleCreated += new EventHandler(webBrowser_HandleCreated);
         }
 
         public string PageSource {
@@ -389,6 +408,7 @@ namespace WebBenchBrowser
         //Event handling
         private void webBrowser_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
+            stopwatch.Stop();
             string eurl = e.Url.ToString();         
             var browser = (WebBrowser)sender;          
             if (!(eurl.StartsWith("http://") || eurl.StartsWith("https://")))              
@@ -406,7 +426,7 @@ namespace WebBenchBrowser
                 logger.Debug("Root download complete: {0}", e.Url.AbsolutePath);
             }
             if (IsDocumentComplete((WebBrowser)sender, e))
-            {                          
+            {
                 // REAL DOCUMENT COMPLETE
                 // Put my code here
                 logger.Debug("full page download complete");
@@ -414,12 +434,12 @@ namespace WebBenchBrowser
                 {
                     if (barrier != null)
                     {
-                        stopwatch.Stop();
                         NavigationUrl = null;
                         document = webBrowser.Document;
                         documentText = webBrowser.DocumentText;
-                        logger.Info("document completed for action {0} in {1}, on url: {2}", Action, stopwatch.Elapsed, e.Url.ToString());
+                        logger.Info("document completed for action #{0} {1} in {2}, on url: {3}", ActionId, Action, stopwatch.Elapsed, e.Url.ToString());
                         LogEventInfo theEvent = new LogEventInfo(LogLevel.Info, "webbench.action", "");
+                        theEvent.Properties["actionId"] = ActionId;
                         theEvent.Properties["action"] = Action;
                         theEvent.Properties["client"] = name_;
                         theEvent.Properties["elapsed"] = stopwatch.Elapsed;
@@ -432,6 +452,10 @@ namespace WebBenchBrowser
                     }
                 }
                 toolStripUrl.Text = e.Url.ToString();
+            }
+            else 
+            {
+                stopwatch.Start();
             }
         }
         
@@ -447,6 +471,12 @@ namespace WebBenchBrowser
             {
                 stopwatch.Start();
             }
+        }
+
+        private void webBrowser_HandleCreated(Object sender, EventArgs e)
+        {
+            logger.Debug("deseable scripting errors detection");
+            webBrowser.ScriptErrorsSuppressed = true;
         }
 
         //Search Context
@@ -580,11 +610,11 @@ namespace WebBenchBrowser
             foreach (HtmlElement e in htmlElements)
             {
                 string text = e.InnerText;
-                if (text == null)
+                /*if (text == null)
                 {
                     logger.Debug("Link without text");
                 }
-                else if (text.Contains(linkText))
+                else */if (text.Contains(linkText))
                 {
                     result.Add(WebElement.newElement(this, e));
                 }
@@ -680,6 +710,7 @@ namespace WebBenchBrowser
 
     public class UrlNavigationCompleteDelegate
     {
+        private static Logger logger = LogManager.GetLogger("webbench.urlcomplete");
         private string m_url;
         public UrlNavigationCompleteDelegate(string url)
         {
@@ -687,8 +718,9 @@ namespace WebBenchBrowser
         }
         public bool IsNavigationUrlEqualsTo(Uri url)
         {
+            logger.Debug("validate {0} agains {1}", m_url, url); 
             if (m_url == null) return true;
-
+            
             return m_url.StartsWith("/") ? m_url.Equals(url.AbsolutePath) : m_url.Equals(url.ToString());
         }
         public static NavigationCompleteDelegate NewUrlDelegate(Uri url) 
@@ -702,7 +734,7 @@ namespace WebBenchBrowser
         public static NavigationCompleteDelegate NewUrlDelegate(string url)
         {
             if (url == null) return NullNavigationDelegate;
-
+            
             UrlNavigationCompleteDelegate delegate_ = new UrlNavigationCompleteDelegate(url);
             return delegate_.IsNavigationUrlEqualsTo;
         }

@@ -74,6 +74,18 @@ namespace WebBenchBrowser
             }
         }
 
+        public int ActionId
+        {
+            get
+            {
+                return parentBrowser.ActionId;
+            }
+            set
+            {
+                parentBrowser.ActionId = value;
+            }
+        }
+
         public string Id
         {
             get
@@ -192,7 +204,7 @@ namespace WebBenchBrowser
 
         public void Click(string url)
         {
-            ClickDelegate(UrlNavigationCompleteDelegate.NewUrlDelegate(url));
+            ClickDelegate(url == null ? null : UrlNavigationCompleteDelegate.NewUrlDelegate(url));
         }
 
         public void ClickDelegate(NavigationCompleteDelegate delegate_)

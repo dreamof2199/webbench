@@ -127,9 +127,9 @@ namespace WebBenchBrowser
             this.urlLabel.Size = new System.Drawing.Size(26, 22);
             this.urlLabel.Text = "URL";
             // 
-            // url
+            // toolStripUrl
             // 
-            this.toolStripUrl.Name = "url";
+            this.toolStripUrl.Name = "toolStripUrl";
             this.toolStripUrl.Size = new System.Drawing.Size(500, 25);
             // 
             // go

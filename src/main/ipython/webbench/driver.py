@@ -35,19 +35,29 @@ from NLog import LogManager
 import time
 import inspect
 from contextlib import contextmanager
+import random
+import threading
 
 # create logger
 logger = LogManager.GetLogger("webbench.driver")
 
+RANDOM_TIME=0
+
+_action_counter = 0
+
 @contextmanager
 def action(obj, name):
-    logger.Debug('execute action {0}', name)
+    global _action_counter
+    _action_counter = _action_counter + 1
+    logger.Debug('execute action: #{0}, {1}', _action_counter, name)
     #if hasattr(obj,'action'):
     obj.setaction(name)
+    obj.setactionid(_action_counter)
     try:
         yield
     finally:
         obj.setaction(None)
+        obj.setactionid(-1)
     #else:
     #    logger.Error('cannot set action on {0}', repr(obj))
     #    yield
@@ -72,6 +82,23 @@ def action(obj, name):
 #    return _action
 
 
+
+def random_action():
+    def _action(f):
+        def __action(*args, **kargs):
+            if inspect.ismethod(f) and f.im_self.getrandom() > 0:
+                localdata = threading.local()
+                if not localdata.random : 
+                    localdata.random = random.Random()
+                    localdata.random.seed()
+                wait_time = f.im_self.getrandom() * localdata.random.random()
+                logger.Debug('sleep {0}s before action execution', wait_time)
+                time.sleep(wait_time)
+            return f(*args, **kargs)
+        __action.func_name = f.func_name
+        return __action
+    return _action
+
 class Wrapper(object):
     def __init__(self, delegate):
         """Creates a webbench wrapper instance.
@@ -90,7 +117,16 @@ class Wrapper(object):
     def setaction(self, name):
         self.delegate.Action = name
     action = property(getaction, setaction, None, "I'm the 'action' property.")
-        
+    
+    def getactionid(self):
+        return self.delegate.ActionId
+    
+    def setactionid(self, id):
+        self.delegate.ActionId = id
+    action_id = property(getactionid, setactionid, None, "I'm the 'action_id' property.")
+    
+    def getrandom(self):
+        return 0
 class SearchContext(Wrapper):
     #Find element
     def find_element(self, by):
@@ -169,6 +205,7 @@ def _wrap_to_webelements(parent, list_):
     for element in list_:
         result.append(_wrap_to_webelement(parent,element))
     return tuple(result)
+
 def _wrap_to_webelement(parent, delegate):
     return WebElement(parent, delegate) if delegate else None
 
@@ -180,6 +217,8 @@ class WebElement(Wrapper):
         Wrapper.__init__(self, delegate)
         self._parent_browser = parent
         
+    def getrandom(self):
+        return self._parent_browser.getrandom()
     @property
     def tag_name(self):
         """Gets this element's tagName property."""
@@ -240,7 +279,7 @@ class WebElement(Wrapper):
         
     @property
     def children(self):
-        return self.delegate.Children
+        return _wrap_to_webelements(self._parent_browser, self.delegate.Children)
 
     #def toggle(self):
     #    """Toggles the element state."""
@@ -346,6 +385,11 @@ class WebElement(Wrapper):
 
 #class WebDriver(SearchContext):
 class WebDriver(SearchContext):
+    def __init__(self, delegate, random_time = 0):
+        SearchContext.__init__(self, delegate)
+        self.random_time = random_time
+    def getrandom(self):
+        return self.random_time
     @property
     def name(self):
         """Returns the name of the underlying browser for this instance."""
@@ -441,8 +485,8 @@ class WebDriver(SearchContext):
         self.delegate.DoRefresh(delegate)
 
 class Ie (WebDriver):
-    def __init__(self, name = "default"):
-        WebDriver.__init__(self, _Browser.NewBrowser(name))
+    def __init__(self, name = "default", random_time = 0):
+        WebDriver.__init__(self, _Browser.NewBrowser(name), random_time)
     def run(self):
         self.delegate.Run()
 
