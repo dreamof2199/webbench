@@ -26,15 +26,19 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="bench.py" />
     <None Include="caceis.py" />
+    <None Include="wbenchsubpro.py" />
+    <None Include="wbench.py" />
     <None Include="webbench\driver.py" />
+    <None Include="webbench\runner.py" />
     <None Include="webbench\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="webbench" />
   </ItemGroup>
   <ItemGroup>
+    <SearchPath Include="C:\sandbox\open-sources\webbench\src\main\dotnet\bin\Debug\" />
+    <SearchPath Include="C:\sandbox\open-sources\webbench\src\main\dotnet\bin\Debug\" />
     <SearchPath Include="C:\sandbox\open-sources\webbench\src\main\dotnet\bin\Debug\" />
     <SearchPath Include="C:\sandbox\open-sources\webbench\src\main\dotnet\bin\Debug\" />
     <SearchPath Include="C:\sandbox\open-sources\webbench\src\main\dotnet\bin\Debug\" />

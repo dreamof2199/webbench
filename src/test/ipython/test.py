@@ -5,10 +5,10 @@ WAIT_TIME = None
 def setup(config):
     global WAIT_TIME
     debug('nothing to setup')
-    WAIT_TIME = config.getint('default','wait_time')
+    WAIT_TIME = config.getint('DEFAULT','wait_time')
 
 def run2(browser):
-    debug('Start run scenario')
+    debug('setup run scenario')
     browser.get('http://code.google.com/intl/fr-FR/')
     element = browser.find_element_by_link_text('Google Web Toolkit')
     element.click()
@@ -26,7 +26,7 @@ def run(browser):
     time.sleep(WAIT_TIME)
     element = browser.find_element_by_link_text('Servlets examples')
     with action(element, 'click on servlet examples link'):
-        element.click()
+        element.click('/examples/servlets/')
     debug('sleep {0}s', WAIT_TIME)
     time.sleep(WAIT_TIME)
     browser.back()
