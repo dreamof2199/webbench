@@ -45,7 +45,7 @@ from NLog import LogManager
 #from NLog.Config import LoggingRule
 #from NLog.Layouts import CsvLayout
 #from NLog.Layouts import CsvColumn
-##
+#
 USAGE = '''usage: %prog [options] senario_path'''
 DEBUG_OPT='''Specify the application has to run in debug mode.
 Default value is: [False]
@@ -69,6 +69,9 @@ KEEP_ALIVE_DEFAULT = False
 KEEP_ALIVE_OPT='''Specify if the browser must be kept alive after scenario execution. 
 This feature is available only when only 1 browser is used. Default value is [{0}]'''.format(KEEP_ALIVE_DEFAULT)
 
+HEADLESS_DEFAULT = False
+HEADLESS_OPT='''Specify if the scenario must be executed in headless mode. Default value is [{0}]'''.format(HEADLESS_DEFAULT)
+
 logger = LogManager.GetLogger("webbench.bench")
 
 def main():
@@ -85,6 +88,8 @@ def main():
                           dest = 'launch_delay', type='int', default=LAUNCH_DELAY_DEFAULT )
     optparser.add_option( '--keep-alive', help = KEEP_ALIVE_OPT,
                           dest = 'keep_alive', action='store_true', default=KEEP_ALIVE_DEFAULT )
+    optparser.add_option( '--headless', help = HEADLESS_OPT,
+                          dest = 'headless', action='store_true', default=HEADLESS_DEFAULT )
     
     options, args = optparser.parse_args()
 
@@ -108,7 +113,7 @@ def main():
     if not os.path.isfile(scenario) :
         optparser.error("scenario path must point a file: {0}".format(str(scenario))) 
     
-    (run_method, setup_method) = getscenariomethodes(scenario, 'webbench');
+    (run_method, setup_method) = getscenariomethodes(scenario, 'webbench')
     if not run_method:
         optparser.error("experiment script must contains a 'run(browser)' method without parameters that provide the future experiment scenario execution")
     logger.Info('****************************************')
@@ -123,7 +128,7 @@ def main():
         execute = processexecute
     execute = localexecute #TODO use multi process
     try:
-        execute(scenario, options.debug, options.nb_browser, options.launch_delay, options.keep_alive, options.random_time)
+        execute(scenario, options.debug, options.nb_browser, options.launch_delay, options.keep_alive, options.random_time, options.headless)
     finally:
         elapsed_time = time.time() - start_time
         logger.Info('****************************************')

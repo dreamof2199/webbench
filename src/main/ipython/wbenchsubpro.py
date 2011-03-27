@@ -61,6 +61,9 @@ LAUNCH_DELAY_OPT='''Specify the time delay between each scenario execution. Defa
 TIMEOUT_DEFAULT = 30
 TIMEOUT_OPT='''Specify timeout execution. Default value [{0}]'''.format(TIMEOUT_DEFAULT)
 
+HEADLESS_DEFAULT = False
+HEADLESS_OPT='''Specify if the scenario must be executed in headless mode. Default value is [{0}]'''.format(HEADLESS_DEFAULT)
+
 logger = LogManager.GetLogger("webbench.bench")
 
 def main():
@@ -77,6 +80,8 @@ def main():
                           dest = 'launch_delay', type='int', default=LAUNCH_DELAY_DEFAULT )
     optparser.add_option( '-t','--timeout', help = TIMEOUT_OPT,
                           dest = 'timeout', type='int', default= TIMEOUT_DEFAULT)
+    #optparser.add_option( '--headless', help = HEADLESS_OPT,
+    #                      dest = 'headless', action='store_true', default=HEADLESS_DEFAULT )
     
     options, args = optparser.parse_args()
 
@@ -84,6 +89,7 @@ def main():
         scenario = args[0]
     else:
         optparser.error("you must specify a scenario path")
+    
     if options.nb_browser < 1:
         optparser.error("you must specify number of browser(s) gretter than 0 and not {0}".format(options.nb_browser))
     if options.launch_delay < 0 :

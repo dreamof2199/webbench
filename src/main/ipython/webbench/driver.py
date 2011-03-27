@@ -41,9 +41,8 @@ import threading
 # create logger
 logger = LogManager.GetLogger("webbench.driver")
 
-RANDOM_TIME=0
-
 _action_counter = 0
+NO_ACTION_ID = -1
 
 @contextmanager
 def action(obj, name):
@@ -53,35 +52,15 @@ def action(obj, name):
     #if hasattr(obj,'action'):
     obj.setaction(name)
     obj.setactionid(_action_counter)
+    if obj.getrandom() > 0:
+        sleep_time = random.random() * obj.getrandom()
+        logger.Debug('random: sleep {0}s before executing action {1}', sleep_time, name)
+        time.sleep(sleep_time)
     try:
         yield
     finally:
         obj.setaction(None)
-        obj.setactionid(-1)
-    #else:
-    #    logger.Error('cannot set action on {0}', repr(obj))
-    #    yield
-    
-#def action(name):
-#    def _action(f):
-#        def __action(*args, **kargs):
-#            if inspect.ismethod(f):
-#                obj = f.im_self
-#                if hasattr(obj,action):
-#                    obj.action = name
-#                    try:
-#                        result = f(*args, **kargs)
-#                    finally:
-#                        obj.action = None
-#                    return result
-#                else:
-#                    logger.Error('cannot set action on {0}', repr(f))
-#            return f(*args, **kargs)
-#        __action.func_name = f.func_name
-#        return __action
-#    return _action
-
-
+        obj.setactionid(NO_ACTION_ID)
 
 def random_action():
     def _action(f):
@@ -127,6 +106,7 @@ class Wrapper(object):
     
     def getrandom(self):
         return 0
+
 class SearchContext(Wrapper):
     #Find element
     def find_element(self, by):
@@ -483,12 +463,17 @@ class WebDriver(SearchContext):
     def refresh(self, delegate = None):
         """Refreshes the current page."""
         self.delegate.DoRefresh(delegate)
+        
+    def hide(self):
+        if self.delegate.Visible:
+            self.delegate.Visible = False
 
 class Ie (WebDriver):
     def __init__(self, name = "default", random_time = 0):
         WebDriver.__init__(self, _Browser.NewBrowser(name), random_time)
     def run(self):
         self.delegate.Run()
+        
 
 #class FireFox (WebDriver):
 #    def __init__(self):

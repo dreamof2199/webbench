@@ -61,8 +61,14 @@ def subprocessexecute(scenario_path, debug, nb_browser, launch_delay, timeout, r
     
     processes = []
     
+    command_line = '{0} --headless'.format(command_line)
+    
     if debug:
         command_line = '{0} --debug'.format(command_line)
+    if random_time > 0:
+        command_line = '{0} --random-time {1}'.format(command_line, random_time)
+    
+    
     
     for i in xrange(1, nb_browser + 1):
         if i > 1 and launch_delay > 0:
@@ -99,21 +105,21 @@ def subprocessexecute(scenario_path, debug, nb_browser, launch_delay, timeout, r
             except:
                 logger.Error('error when kill process: {0}', process.pid)
             
-def processexecute(scenario_path, debug, nb_browser, launch_delay, keep_alive, random_time):
+def processexecute(scenario_path, debug, nb_browser, launch_delay, keep_alive, random_time, headless):
     from multiprocessing import Process
     from multiprocessing import Event
     processes = []
     fire_synchro_end = Event()
     for process_number in xrange(0, nb_browser):
         fire_instanciation_end = Event() 
-        process = Process(target=doinprocess, args=(scenario_path, debug, process_number, launch_delay, keep_alive, random_time, fire_instanciation_end, fire_synchro_end,),name='scenario-' + process_number)
+        process = Process(target=doinprocess, args=(scenario_path, debug, process_number, launch_delay, keep_alive, random_time, headless, fire_instanciation_end, fire_synchro_end,),name='scenario-' + process_number)
         fire_instanciation_end.wait() #todo add timeout
     fire_synchro_end.set(True)
     for process in processes:
         process.join()
 
-def doinprocess(scenario_path, debug, nb_browser, launch_delay, keep_alive, random_time, fire_instanciation_end, fire_synchro_end):
-    (run_method, browser) = instanciate(scenario_path, nb_browser)
+def doinprocess(scenario_path, debug, nb_browser, launch_delay, keep_alive, random_time, headless, fire_instanciation_end, fire_synchro_end):
+    (run_method, browser) = instanciate(scenario_path, nb_browser, headless, random_time)
     run(run_method, browser, launch_delay)
     fire_instanciation_end.set(True) #interprocess barrier simulation
     fire_synchro_end.wait() #todo add timeout
@@ -127,16 +133,18 @@ def loadconfig (configpath):
             config.readfp(configfile)
     return config
 
-def instanciate(scenario_path, nb_browser):
+def instanciate(scenario_path, nb_browser, headless, random_time):
     (configpath, logpath, csvpath) = getfilepaths(scenario_path)
     config = loadconfig(configpath)
     logger.Debug('create browser {0} instance', nb_browser)
     browser_name = 'client-{0}'.format(nb_browser)
-    browser = webbench.Ie(browser_name)
+    browser = webbench.Ie(browser_name, random_time)
     (run_method, setup_method) = getscenariomethodes(scenario_path, browser_name)
     if setup_method:
         setup_method(config)
     browser.run()
+    if headless:
+        browser.hide()
     return (run_method, browser)
 
 def run(run_method, browser, launch_delay):
@@ -144,7 +152,7 @@ def run(run_method, browser, launch_delay):
     time.sleep(launch_delay)
     run_method(browser)
 
-def localexecute(scenario_path, debug, nb_browser, launch_delay, keep_alive, random_time):
+def localexecute(scenario_path, debug, nb_browser, launch_delay, keep_alive, random_time, headless):
     logger.Debug('local execution')
     (configpath, logpath, csvpath) = getfilepaths(scenario_path, 'client-{0}'.format(nb_browser))
     if os.path.exists(logpath):
@@ -152,7 +160,7 @@ def localexecute(scenario_path, debug, nb_browser, launch_delay, keep_alive, ran
     if os.path.exists(csvpath):
         os.remove(csvpath)
     initlogger(debug, csvpath, logpath)
-    (run_method, browser) = instanciate(scenario_path, nb_browser)
+    (run_method, browser) = instanciate(scenario_path, nb_browser, headless, random_time)
     run(run_method, browser, launch_delay)
     if not(keep_alive):
         close_browser(browser)
@@ -166,7 +174,7 @@ def debug(message):
 
 def info(message):
     logger.Info(message)
-
+    
 def initconsollogger(debug):
     # Step 1. Create configuration object 
     config = LoggingConfiguration()
