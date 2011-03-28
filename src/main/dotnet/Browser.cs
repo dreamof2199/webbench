@@ -688,9 +688,10 @@ namespace WebBenchBrowser
             return true;
         }
 
-        private void toolStripUrl_Enter(object sender, EventArgs e)
+        private void toolStripUrl_KeyDown(object sender, KeyEventArgs e)
         {
-            Get(toolStripUrl.Text, null);
+            if (e.KeyCode == Keys.Enter)
+                Get(toolStripUrl.Text, null);
         }
     //    private void webBrowser1_Navigating(object sender, WebBrowserNavigatingEventArgs e)
     //    {

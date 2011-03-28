@@ -47,7 +47,6 @@ namespace WebBenchBrowser
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Browser));
             this.webBrowser = new System.Windows.Forms.WebBrowser();
             this.back = new System.Windows.Forms.ToolStripButton();
             this.forward = new System.Windows.Forms.ToolStripButton();
@@ -74,7 +73,7 @@ namespace WebBenchBrowser
             // back
             // 
             this.back.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.back.Image = ((System.Drawing.Image)(resources.GetObject("back.Image")));
+            this.back.Image = global::WebBenchBrowser.Properties.Resources.backward;
             this.back.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.back.Name = "back";
             this.back.Size = new System.Drawing.Size(23, 22);
@@ -84,7 +83,7 @@ namespace WebBenchBrowser
             // forward
             // 
             this.forward.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.forward.Image = ((System.Drawing.Image)(resources.GetObject("forward.Image")));
+            this.forward.Image = global::WebBenchBrowser.Properties.Resources.forward;
             this.forward.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.forward.Name = "forward";
             this.forward.Size = new System.Drawing.Size(23, 22);
@@ -94,7 +93,7 @@ namespace WebBenchBrowser
             // refresh
             // 
             this.refresh.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.refresh.Image = ((System.Drawing.Image)(resources.GetObject("refresh.Image")));
+            this.refresh.Image = global::WebBenchBrowser.Properties.Resources.refresh;
             this.refresh.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.refresh.Name = "refresh";
             this.refresh.Size = new System.Drawing.Size(23, 22);
@@ -104,7 +103,7 @@ namespace WebBenchBrowser
             // stop
             // 
             this.stop.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.stop.Image = ((System.Drawing.Image)(resources.GetObject("stop.Image")));
+            this.stop.Image = global::WebBenchBrowser.Properties.Resources.stop;
             this.stop.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.stop.Name = "stop";
             this.stop.Size = new System.Drawing.Size(23, 22);
@@ -114,7 +113,7 @@ namespace WebBenchBrowser
             // home
             // 
             this.home.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.home.Image = ((System.Drawing.Image)(resources.GetObject("home.Image")));
+            this.home.Image = global::WebBenchBrowser.Properties.Resources.home;
             this.home.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.home.Name = "home";
             this.home.Size = new System.Drawing.Size(23, 22);
@@ -131,12 +130,12 @@ namespace WebBenchBrowser
             // 
             this.toolStripUrl.Name = "toolStripUrl";
             this.toolStripUrl.Size = new System.Drawing.Size(500, 25);
-            this.toolStripUrl.Enter += new System.EventHandler(this.toolStripUrl_Enter);
+            this.toolStripUrl.KeyDown += new System.Windows.Forms.KeyEventHandler(this.toolStripUrl_KeyDown);
             // 
             // go
             // 
             this.go.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.go.Image = ((System.Drawing.Image)(resources.GetObject("go.Image")));
+            this.go.Image = global::WebBenchBrowser.Properties.Resources.go;
             this.go.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.go.Name = "go";
             this.go.Size = new System.Drawing.Size(23, 22);

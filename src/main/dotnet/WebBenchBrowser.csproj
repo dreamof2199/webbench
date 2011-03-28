@@ -120,6 +120,24 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\stop2.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\backward2.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\forward2.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\go2.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\home2.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\refresh2.gif" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
