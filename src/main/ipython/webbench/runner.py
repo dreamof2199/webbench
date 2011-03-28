@@ -52,7 +52,7 @@ def getoption(config, section, option, default):
     except ConfigParser.NoOptionError:
         return default
 
-def subprocessexecute(scenario_path, debug, nb_browser, launch_delay, timeout, random_time):
+def subprocessexecute(scenario_path, debug, nb_browser, launch_delay, timeout, random_time, headless):
     from subprocess import Popen
     (configpath, logpath, csvpath) = getfilepaths(scenario_path)
     config = loadconfig(configpath)
@@ -61,8 +61,8 @@ def subprocessexecute(scenario_path, debug, nb_browser, launch_delay, timeout, r
     
     processes = []
     
-    command_line = '{0} --headless'.format(command_line)
-    
+    if headless:
+        command_line = '{0} --headless'.format(command_line)
     if debug:
         command_line = '{0} --debug'.format(command_line)
     if random_time > 0:

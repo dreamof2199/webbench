@@ -80,8 +80,8 @@ def main():
                           dest = 'launch_delay', type='int', default=LAUNCH_DELAY_DEFAULT )
     optparser.add_option( '-t','--timeout', help = TIMEOUT_OPT,
                           dest = 'timeout', type='int', default= TIMEOUT_DEFAULT)
-    #optparser.add_option( '--headless', help = HEADLESS_OPT,
-    #                      dest = 'headless', action='store_true', default=HEADLESS_DEFAULT )
+    optparser.add_option( '--no-headless', help = HEADLESS_OPT,
+                          dest = 'no_headless', action='store_true', default=HEADLESS_DEFAULT )
     
     options, args = optparser.parse_args()
 
@@ -115,7 +115,7 @@ def main():
     start_time = time.time()
     
     try:
-        subprocessexecute(scenario, options.debug, options.nb_browser, options.launch_delay, options.timeout, options.random_time)
+        subprocessexecute(scenario, options.debug, options.nb_browser, options.launch_delay, options.timeout, options.random_time, not options.no_headless)
     finally:
         elapsed_time = time.time() - start_time
         logger.Info('****************************************')
