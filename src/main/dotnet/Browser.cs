@@ -687,6 +687,11 @@ namespace WebBenchBrowser
         {
             return true;
         }
+
+        private void toolStripUrl_Enter(object sender, EventArgs e)
+        {
+            Get(toolStripUrl.Text, null);
+        }
     //    private void webBrowser1_Navigating(object sender, WebBrowserNavigatingEventArgs e)
     //    {
     //        System.Windows.Forms.HtmlDocument document =

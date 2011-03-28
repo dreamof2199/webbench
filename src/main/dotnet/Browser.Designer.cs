@@ -131,6 +131,7 @@ namespace WebBenchBrowser
             // 
             this.toolStripUrl.Name = "toolStripUrl";
             this.toolStripUrl.Size = new System.Drawing.Size(500, 25);
+            this.toolStripUrl.Enter += new System.EventHandler(this.toolStripUrl_Enter);
             // 
             // go
             // 
