@@ -1,0 +1,1 @@
+Based on selenium 2, Web Bench aims to provide a simple API to script and perform performance tests bench.
